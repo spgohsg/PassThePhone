@@ -12,8 +12,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .container {
             background-color: white;
@@ -21,7 +23,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             text-align: center;
-            max-width: 400px;
+            max-width: 450px;
             width: 100%;
         }
         h1 { color: #1a73e8; margin-top: 0; }
@@ -56,6 +58,43 @@
             background-color: #e8f0fe;
         }
         .warning { color: #d93025; font-size: 14px; font-weight: bold; }
+        
+        /* Dashboard Styling */
+        .dashboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+        .dashboard-table th, .dashboard-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dadce0;
+        }
+        .dashboard-table th {
+            background-color: #f8f9fa;
+            color: #1a73e8;
+            font-weight: bold;
+        }
+        .dashboard-table tr:hover {
+            background-color: #f1f3f4;
+        }
+        .badge {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .reveal-alert {
+            background-color: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ffeeba;
+            margin: 15px 0;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -95,12 +134,29 @@
         </div>
     </div>
 
-    <!-- STEP 4: Game Summary -->
+    <!-- STEP 4: Game Over (Dashboard Hidden) -->
     <div id="step4" class="hidden">
-        <h2>Game Setup Complete!</h2>
-        <p>All players have drawn their secret numbers.</p>
-        <p>No numbers were duplicated.</p>
-        <button onclick="resetGame()">🔄 Play Again / New Room</button>
+        <h2>All Players Finished!</h2>
+        <div class="reveal-alert">📣 Everyone has drawn a card. Gather around before revealing the results!</div>
+        <button id="finalRevealBtn" style="background-color: #34a853;" onclick="revealDashboard()">🔓 Reveal Final Dashboard</button>
+        
+        <!-- Nested Content Container for the Dashboard -->
+        <div id="dashboardContainer" class="hidden">
+            <h2>📊 Final Dashboard</h2>
+            <p>Listed from lowest to highest number:</p>
+            <table class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th>Player Name</th>
+                        <th style="text-align: right;">Card Number</th>
+                    </tr>
+                </thead>
+                <tbody id="dashboardBody">
+                    <!-- Sorted player rows will be inserted here -->
+                </tbody>
+            </table>
+            <button onclick="resetGame()">🔄 Play Again / New Room</button>
+        </div>
     </div>
 </div>
 
@@ -176,9 +232,8 @@
     }
 
     function spinCard() {
-        // Pick a truly unique random number from remaining deck items
         const randomIndex = Math.floor(Math.random() * availableNumbers.length);
-        const drawnNumber = availableNumbers.splice(randomIndex, 1)[0];
+        const drawnNumber = availableNumbers.splice(randomIndex, 1);
 
         players[currentPlayerIndex].number = drawnNumber;
 
@@ -205,24 +260,24 @@
         if (currentPlayerIndex < players.length) {
             startTurn();
         } else {
-            // Game Over
+            // Setup the dashboard contents in the background, but don't show them yet
+            prepareDashboardData();
+            // Move to Step 4 screen (which only shows the reveal button)
             document.getElementById('step3').classList.add('hidden');
             document.getElementById('step4').classList.remove('hidden');
         }
     }
 
-    function resetGame() {
-        gameRoom = "";
-        maxPlayers = 0;
-        players = [];
-        availableNumbers = [];
-        currentPlayerIndex = 0;
+    function prepareDashboardData() {
+        // Create a copy of the players array and sort it in ascending order by their number
+        const sortedPlayers = [...players].sort((a, b) => a.number - b.number);
         
-        document.getElementById('roomHeading').innerText = "";
-        document.getElementById('step4').classList.add('hidden');
-        document.getElementById('step1').classList.remove('hidden');
-    }
-</script>
+        const tbody = document.getElementById('dashboardBody');
+        tbody.innerHTML = ""; // Clear any old data
+        
+        // Populate the dashboard table structure
+        sortedPlayers.forEach(player => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${player.name}</strong></td>
 
-</body>
-</html>
