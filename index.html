@@ -185,6 +185,10 @@
     }
 
     function spinCard() {
+
+        playSpinSound(); // <--- ADD THIS LINE
+    var randomIndex = Math.floor(Math.random() * availableNumbers.length);
+        
         // Pick a truly unique random number from remaining deck items
         const randomIndex = Math.floor(Math.random() * availableNumbers.length);
         const drawnNumber = availableNumbers.splice(randomIndex, 1)[0];
@@ -223,6 +227,8 @@
     // NEW SAFE FUNCTION: Sorts and displays data only when clicked
     function revealFinalDashboard() {
         // 1. Sort the players array in ascending order by their number
+
+         playRevealSound();
         var sorted = players.sort(function(a, b) { 
             return a.number - b.number; 
         });
