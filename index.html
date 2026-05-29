@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secret Card Number Generator</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 { color: #1a73e8; margin-top: 0; }
+        h2 { color: #5f6368; }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 1px solid #dadce0;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        button:hover { background-color: #1557b0; }
+        .hidden { display: none; }
+        .card-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: #d93025;
+            margin: 20px 0;
+            padding: 20px;
+            border: 3px dashed #1a73e8;
+            border-radius: 8px;
+            background-color: #e8f0fe;
+        }
+        .warning { color: #d93025; font-size: 14px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🃏 Secret Deck 100</h1>
+    <p id="roomHeading" style="font-weight: bold; color: #1a73e8;"></p>
+
+    <!-- STEP 1: Room Setup -->
+    <div id="step1">
+        <h2>Setup Game Room</h2>
+        <input type="text" id="roomName" placeholder="Enter Game Room Name">
+        <input type="number" id="totalPlayers" placeholder="Number of Players" min="1" max="100">
+        <button onclick="setupRoom()">Create Room</button>
+    </div>
+
+    <!-- STEP 2: Player Join/Name Entry -->
+    <div id="step2" class="hidden">
+        <h2>Player Registration</h2>
+        <p id="playerSequence"></p>
+        <input type="text" id="playerName" placeholder="Enter Your Name">
+        <button onclick="registerPlayer()">Join Room</button>
+    </div>
+
+    <!-- STEP 3: Spin & Reveal (Pass the phone) -->
+    <div id="step3" class="hidden">
+        <h2>Active Game Session</h2>
+        <p id="turnPrompt"></p>
+        
+        <button id="spinBtn" onclick="spinCard()">🎰 Spin Your Card</button>
+        
+        <div id="revealSection" class="hidden">
+            <p class="warning">⚠️ Make sure no one else is looking! ⚠️</p>
+            <button id="revealBtn" onclick="toggleReveal()">👁️ Show My Number</button>
+            <div id="cardNumber" class="card-display hidden">--</div>
+            <button onclick="nextTurn()">Done, Pass to Next Player</button>
+        </div>
+    </div>
+
+    <!-- STEP 4: Game Summary -->
+    <div id="step4" class="hidden">
+        <h2>Game Setup Complete!</h2>
+        <p>All players have drawn their secret numbers.</p>
+        <p>No numbers were duplicated.</p>
+        <button onclick="resetGame()">🔄 Play Again / New Room</button>
+    </div>
+</div>
+
+<script>
+    // Game State Variables
+    let gameRoom = "";
+    let maxPlayers = 0;
+    let players = []; // Array of objects: { name: '', number: null }
+    let availableNumbers = [];
+    let currentPlayerIndex = 0;
+
+    // Initialize deck numbers 1 to 100
+    function initDeck() {
+        availableNumbers = [];
+        for (let i = 1; i <= 100; i++) {
+            availableNumbers.push(i);
+        }
+    }
+
+    // Step 1 -> Step 2
+    function setupRoom() {
+        const roomInput = document.getElementById('roomName').value.trim();
+        const playersInput = parseInt(document.getElementById('totalPlayers').value);
+
+        if (!roomInput || isNaN(playersInput) || playersInput < 1 || playersInput > 100) {
+            alert("Please enter a valid room name and player count (1-100).");
+            return;
+        }
+
+        gameRoom = roomInput;
+        maxPlayers = playersInput;
+        initDeck();
+
+        document.getElementById('roomHeading').innerText = `Room: ${gameRoom}`;
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        updatePlayerSequenceText();
+    }
+
+    function updatePlayerSequenceText() {
+        document.getElementById('playerSequence').innerText = `Registering Player ${players.length + 1} of ${maxPlayers}`;
+    }
+
+    // Step 2 loop
+    function registerPlayer() {
+        const nameInput = document.getElementById('playerName').value.trim();
+        if (!nameInput) {
+            alert("Please enter a name.");
+            return;
+        }
+
+        players.push({ name: nameInput, number: null });
+        document.getElementById('playerName').value = "";
+
+        if (players.length < maxPlayers) {
+            updatePlayerSequenceText();
+        } else {
+            // All players registered, move to Step 3
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step3').classList.remove('hidden');
+            startTurn();
+        }
+    }
+
+    // Step 3 gameplay loop
+    function startTurn() {
+        const currentInterfacePlayer = players[currentPlayerIndex];
+        document.getElementById('turnPrompt').innerText = `👉 Hand the device to: ${currentInterfacePlayer.name}`;
+        document.getElementById('spinBtn').classList.remove('hidden');
+        document.getElementById('revealSection').classList.add('hidden');
+        document.getElementById('cardNumber').classList.add('hidden');
+        document.getElementById('revealBtn').innerText = "👁️ Show My Number";
+    }
+
+    function spinCard() {
+        // Pick a truly unique random number from remaining deck items
+        const randomIndex = Math.floor(Math.random() * availableNumbers.length);
+        const drawnNumber = availableNumbers.splice(randomIndex, 1)[0];
+
+        players[currentPlayerIndex].number = drawnNumber;
+
+        document.getElementById('spinBtn').classList.add('hidden');
+        document.getElementById('revealSection').classList.remove('hidden');
+        document.getElementById('cardNumber').innerText = drawnNumber;
+    }
+
+    function toggleReveal() {
+        const cardDiv = document.getElementById('cardNumber');
+        const revealBtn = document.getElementById('revealBtn');
+        
+        if (cardDiv.classList.contains('hidden')) {
+            cardDiv.classList.remove('hidden');
+            revealBtn.innerText = "🙈 Hide My Number";
+        } else {
+            cardDiv.classList.add('hidden');
+            revealBtn.innerText = "👁️ Show My Number";
+        }
+    }
+
+    function nextTurn() {
+        currentPlayerIndex++;
+        if (currentPlayerIndex < players.length) {
+            startTurn();
+        } else {
+            // Game Over
+            document.getElementById('step3').classList.add('hidden');
+            document.getElementById('step4').classList.remove('hidden');
+        }
+    }
+
+    function resetGame() {
+        gameRoom = "";
+        maxPlayers = 0;
+        players = [];
+        availableNumbers = [];
+        currentPlayerIndex = 0;
+        
+        document.getElementById('roomHeading').innerText = "";
+        document.getElementById('step4').classList.add('hidden');
+        document.getElementById('step1').classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
