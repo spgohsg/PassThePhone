@@ -251,6 +251,65 @@
         document.getElementById('step4').classList.add('hidden');
         document.getElementById('step1').classList.remove('hidden');
     }
+
+// --- AUDIO ENGINE ---
+// Creates a browser audio instance safely
+function getAudioContext() {
+    return new (window.AudioContext || window.webkitAudioContext)();
+}
+
+// Sound 1: Fast arcade pitch sweeps to simulate a rolling wheel/spin
+function playSpinSound() {
+    try {
+        var ctx = getAudioContext();
+        var now = ctx.currentTime;
+        
+        // Create 4 quick blips in a row
+        for (var i = 0; i < 4; i++) {
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            
+            osc.type = 'triangle'; // Gives a retro gaming sound
+            osc.frequency.setValueAtTime(150 + (i * 100), now + (i * 0.08)); 
+            osc.frequency.exponentialRampToValueAtTime(600 + (i * 100), now + (i * 0.08) + 0.06);
+            
+            gain.gain.setValueAtTime(0.15, now + (i * 0.08));
+            gain.gain.exponentialRampToValueAtTime(0.01, now + (i * 0.08) + 0.06);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + (i * 0.08));
+            osc.stop(now + (i * 0.08) + 0.06);
+        }
+    } catch(e) { console.log("Audio not supported yet"); }
+}
+
+// Sound 2: A bright, triumphant chord for the grand reveal
+function playRevealSound() {
+    try {
+        var ctx = getAudioContext();
+        var now = ctx.currentTime;
+        var notes = [261.63, 329.63, 392.00, 523.25]; // C major chord notes
+        
+        notes.forEach(function(freq, index) {
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            
+            osc.type = 'sine'; // Clean, bell-like tone
+            osc.frequency.setValueAtTime(freq, now + (index * 0.05));
+            
+            gain.gain.setValueAtTime(0.2, now + (index * 0.05));
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + (index * 0.05));
+            osc.stop(now + 0.8);
+        });
+    } catch(e) { console.log("Audio not supported yet"); }
+}
+
+    
 </script>
 
 </body>
