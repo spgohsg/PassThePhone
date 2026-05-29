@@ -46,7 +46,7 @@
             transition: background-color 0.2s;
         }
         button:hover { background-color: #1557b0; }
-        .hidden { display: none; }
+        .hidden { display: none !important; }
         .card-display {
             font-size: 48px;
             font-weight: bold;
@@ -106,9 +106,9 @@
     <!-- STEP 1: Room Setup -->
     <div id="step1">
         <h2>Setup Game Room</h2>
-        <input type="text" id="roomName" placeholder="Enter Game Room Name">
-        <input type="number" id="totalPlayers" placeholder="Number of Players" min="1" max="100">
-        <button onclick="setupRoom()">Create Room</button>
+        <input type="text" id="roomName" placeholder="Enter Game Room Name" value="My Game Room">
+        <input type="number" id="totalPlayers" placeholder="Number of Players" min="1" max="100" value="3">
+        <button type="button" id="createRoomBtn" onclick="setupRoom()">Create Room</button>
     </div>
 
     <!-- STEP 2: Player Join/Name Entry -->
@@ -116,31 +116,30 @@
         <h2>Player Registration</h2>
         <p id="playerSequence"></p>
         <input type="text" id="playerName" placeholder="Enter Your Name">
-        <button onclick="registerPlayer()">Join Room</button>
+        <button type="button" onclick="registerPlayer()">Join Room</button>
     </div>
 
-    <!-- STEP 3: Spin & Reveal (Pass the phone) -->
+    <!-- STEP 3: Spin & Reveal -->
     <div id="step3" class="hidden">
         <h2>Active Game Session</h2>
         <p id="turnPrompt"></p>
         
-        <button id="spinBtn" onclick="spinCard()">🎰 Spin Your Card</button>
+        <button type="button" id="spinBtn" onclick="spinCard()">🎰 Spin Your Card</button>
         
         <div id="revealSection" class="hidden">
             <p class="warning">⚠️ Make sure no one else is looking! ⚠️</p>
-            <button id="revealBtn" onclick="toggleReveal()">👁️ Show My Number</button>
+            <button type="button" id="revealBtn" onclick="toggleReveal()">👁️ Show My Number</button>
             <div id="cardNumber" class="card-display hidden">--</div>
-            <button onclick="nextTurn()">Done, Pass to Next Player</button>
+            <button type="button" onclick="nextTurn()">Done, Pass to Next Player</button>
         </div>
     </div>
 
-    <!-- STEP 4: Game Over (Dashboard Hidden) -->
+    <!-- STEP 4: Game Over Dashboard -->
     <div id="step4" class="hidden">
         <h2>All Players Finished!</h2>
         <div id="alertBanner" class="reveal-alert">📣 Everyone has drawn a card. Gather around before revealing the results!</div>
-        <button id="finalRevealBtn" style="background-color: #34a853;" onclick="revealDashboard()">🔓 Reveal Final Dashboard</button>
+        <button type="button" id="finalRevealBtn" style="background-color: #34a853;" onclick="revealDashboard()">🔓 Reveal Final Dashboard</button>
         
-        <!-- Nested Content Container for the Dashboard -->
         <div id="dashboardContainer" class="hidden">
             <h2>📊 Final Dashboard</h2>
             <p>Listed from lowest to highest number:</p>
@@ -152,57 +151,67 @@
                     </tr>
                 </thead>
                 <tbody id="dashboardBody">
-                    <!-- Sorted player rows will be inserted here -->
+                    <!-- Rows injected here -->
                 </tbody>
             </table>
-            <button onclick="resetGame()">🔄 Play Again / New Room</button>
+            <button type="button" onclick="resetGame()">🔄 Play Again / New Room</button>
         </div>
     </div>
 </div>
 
 <script>
-    // Game State Variables
-    let gameRoom = "";
-    let maxPlayers = 0;
-    let players = []; 
-    let availableNumbers = [];
-    let currentPlayerIndex = 0;
+    // System Variables
+    var gameRoom = "";
+    var maxPlayers = 0;
+    var players = []; 
+    var availableNumbers = [];
+    var currentPlayerIndex = 0;
 
-    // Initialize deck numbers 1 to 100
     function initDeck() {
         availableNumbers = [];
-        for (let i = 1; i <= 100; i++) {
+        for (var i = 1; i <= 100; i++) {
             availableNumbers.push(i);
         }
     }
 
-    // Step 1 -> Step 2
+    // Step 1 Click Action
     function setupRoom() {
-        const roomInput = document.getElementById('roomName').value.trim();
-        const playersInput = parseInt(document.getElementById('totalPlayers').value);
+        try {
+            var roomInput = document.getElementById('roomName').value;
+            var playersInput = document.getElementById('totalPlayers').value;
 
-        if (!roomInput || isNaN(playersInput) || playersInput < 1 || playersInput > 100) {
-            alert("Please enter a valid room name and player count (1-100).");
-            return;
+            if (!roomInput || !playersInput) {
+                alert("Please fill out both the room name and number of players.");
+                return;
+            }
+
+            gameRoom = roomInput.toString();
+            maxPlayers = parseInt(playersInput, 10);
+
+            if (isNaN(maxPlayers) || maxPlayers < 1 || maxPlayers > 100) {
+                alert("Please enter a valid player size between 1 and 100.");
+                return;
+            }
+
+            initDeck();
+
+            document.getElementById('roomHeading').innerText = "Room: " + gameRoom;
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            
+            updatePlayerSequenceText();
+        } catch (err) {
+            alert("An error occurred: " + err.message);
         }
-
-        gameRoom = roomInput;
-        maxPlayers = playersInput;
-        initDeck();
-
-        document.getElementById('roomHeading').innerText = `Room: ${gameRoom}`;
-        document.getElementById('step1').classList.add('hidden');
-        document.getElementById('step2').classList.remove('hidden');
-        updatePlayerSequenceText();
     }
 
     function updatePlayerSequenceText() {
-        document.getElementById('playerSequence').innerText = `Registering Player ${players.length + 1} of ${maxPlayers}`;
+        var currentCount = players.length + 1;
+        document.getElementById('playerSequence').innerText = "Registering Player " + currentCount + " of " + maxPlayers;
     }
 
-    // Step 2 loop
     function registerPlayer() {
-        const nameInput = document.getElementById('playerName').value.trim();
+        var nameInput = document.getElementById('playerName').value.trim();
         if (!nameInput) {
             alert("Please enter a name.");
             return;
@@ -220,10 +229,9 @@
         }
     }
 
-    // Step 3 gameplay loop
     function startTurn() {
-        const currentInterfacePlayer = players[currentPlayerIndex];
-        document.getElementById('turnPrompt').innerText = `👉 Hand the device to: ${currentInterfacePlayer.name}`;
+        var currentInterfacePlayer = players[currentPlayerIndex];
+        document.getElementById('turnPrompt').innerText = "👉 Hand the device to: " + currentInterfacePlayer.name;
         document.getElementById('spinBtn').classList.remove('hidden');
         document.getElementById('revealSection').classList.add('hidden');
         document.getElementById('cardNumber').classList.add('hidden');
@@ -231,8 +239,8 @@
     }
 
     function spinCard() {
-        const randomIndex = Math.floor(Math.random() * availableNumbers.length);
-        const drawnNumber = availableNumbers.splice(randomIndex, 1)[0];
+        var randomIndex = Math.floor(Math.random() * availableNumbers.length);
+        var drawnNumber = availableNumbers.splice(randomIndex, 1)[0];
 
         players[currentPlayerIndex].number = drawnNumber;
 
@@ -242,8 +250,8 @@
     }
 
     function toggleReveal() {
-        const cardDiv = document.getElementById('cardNumber');
-        const revealBtn = document.getElementById('revealBtn');
+        var cardDiv = document.getElementById('cardNumber');
+        var revealBtn = document.getElementById('revealBtn');
         
         if (cardDiv.classList.contains('hidden')) {
             cardDiv.classList.remove('hidden');
@@ -266,20 +274,12 @@
     }
 
     function prepareDashboardData() {
-        const sortedPlayers = [...players].sort((a, b) => a.number - b.number);
-        const tbody = document.getElementById('dashboardBody');
+        var sortedPlayers = [].concat(players).sort(function(a, b) {
+            return a.number - b.number;
+        });
+        
+        var tbody = document.getElementById('dashboardBody');
         tbody.innerHTML = ""; 
         
-        sortedPlayers.forEach(player => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><strong>${player.name}</strong></td>
-                <td style="text-align: right;"><span class="badge">${player.number}</span></td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
-
-    function revealDashboard() {
-        document.getElementById('finalRevealBtn').classList.add('hidden');
-        document.getElementById('alertBanner').classList.add('hidden');
+        sortedPlayers.forEach(function(player) {
+            var row = document.createElement('tr');
