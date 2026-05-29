@@ -96,13 +96,22 @@
     </div>
 
     <!-- STEP 4: Game Summary -->
+        <!-- STEP 4: Game Summary & Hidden Dashboard -->
     <div id="step4" class="hidden">
-        <h2>Game Setup Complete!</h2>
-        <p>All players have drawn their secret numbers.</p>
-        <p>No numbers were duplicated.</p>
-        <button onclick="resetGame()">🔄 Play Again / New Room</button>
+        <h2>🎉 All Players Finished!</h2>
+        <p>Everyone has drawn a card. Gather around the screen!</p>
+        
+        <!-- The Final Button Click Requirement -->
+        <button id="showDashboardBtn" onclick="revealFinalDashboard()" style="background-color: #34a853;">🔓 Reveal Final Dashboard</button>
+
+        <!-- The Hidden Table Container -->
+        <div id="secretTableContainer" style="display: none; margin-top: 20px;">
+            <h3 style="color: #1a73e8;">📊 Final Results (Ascending Order)</h3>
+            <div id="dashboardList" style="text-align: left; background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dadce0;"></div>
+            <button onclick="resetGame()" style="margin-top: 15px;">🔄 Play Again / New Room</button>
+        </div>
     </div>
-</div>
+
 
 <script>
     // Game State Variables
@@ -200,16 +209,36 @@
         }
     }
 
-    function nextTurn() {
+        function nextTurn() {
         currentPlayerIndex++;
         if (currentPlayerIndex < players.length) {
             startTurn();
         } else {
-            // Game Over
+            // Game Over -> Move to Step 4 screen
             document.getElementById('step3').classList.add('hidden');
             document.getElementById('step4').classList.remove('hidden');
         }
     }
+
+    // NEW SAFE FUNCTION: Sorts and displays data only when clicked
+    function revealFinalDashboard() {
+        // 1. Sort the players array in ascending order by their number
+        var sorted = players.sort(function(a, b) { 
+            return a.number - b.number; 
+        });
+        
+        // 2. Build a simple text list of the players and numbers
+        var listHtml = "";
+        for (var i = 0; i < sorted.length; i++) {
+            listHtml += "<p>• <strong>" + sorted[i].name + "</strong>: " + sorted[i].number + "</p>";
+        }
+        
+        // 3. Inject the text list and display the container
+        document.getElementById('dashboardList').innerHTML = listHtml;
+        document.getElementById('secretTableContainer').style.display = 'block';
+        document.getElementById('showDashboardBtn').style.display = 'none'; // Hide the reveal button
+    }
+
 
     function resetGame() {
         gameRoom = "";
