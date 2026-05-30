@@ -229,13 +229,13 @@
         playRevealSound(); 
         
         // FIX: [].concat(players) makes a fresh copy so the original game list is never ruined
-  //      var sorted = [].concat(players).sort(function(a, b) { 
-  //          return a.number - b.number; 
-    //    });
+      var sorted = [].concat(players).sort(function(a, b) { 
+           return a.number - b.number; 
+       });
 
-         var sorted = players.sort(function(a, b) { 
-            return a.number - b.number; 
-        });
+   //      var sorted = players.sort(function(a, b) { 
+   //         return a.number - b.number; 
+    //    });
            
         
         // Build the text list
@@ -255,15 +255,17 @@
     function resetGame() {
         gameRoom = "";
         maxPlayers = 0;
-        players = [];
+        players = []; // Clears out the old player array entirely
         availableNumbers = [];
         currentPlayerIndex = 0;
         
         document.getElementById('roomHeading').innerText = "";
+        document.getElementById('secretTableContainer').style.display = 'none';
+        document.getElementById('showDashboardBtn').style.display = 'block';
         document.getElementById('step4').classList.add('hidden');
         document.getElementById('step1').classList.remove('hidden');
-
-            // Resets your text input fields back to empty
+        
+        // Resets your text input fields back to empty
         document.getElementById('roomName').value = "";
         document.getElementById('totalPlayers').value = "";
         document.getElementById('dashboardList').innerHTML = ""; // Clears old HTML text box
