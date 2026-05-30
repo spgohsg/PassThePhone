@@ -229,9 +229,13 @@
         // 1. Sort the players array in ascending order by their number
 
          playRevealSound();
-        var sorted = players.sort(function(a, b) { 
+     //   var sorted = players.sort(function(a, b) { 
+     //       return a.number - b.number; 
+    //    });
+
+          // FIX: [].concat(players) makes a fresh copy so the original game list is never ruined
+        var sorted = [].concat(players).sort(function(a, b) { 
             return a.number - b.number; 
-        });
         
         // 2. Build a simple text list of the players and numbers
         var listHtml = "";
@@ -256,6 +260,11 @@
         document.getElementById('roomHeading').innerText = "";
         document.getElementById('step4').classList.add('hidden');
         document.getElementById('step1').classList.remove('hidden');
+
+            // Resets your text input fields back to empty
+        document.getElementById('roomName').value = "";
+        document.getElementById('totalPlayers').value = "";
+        document.getElementById('dashboardList').innerHTML = ""; // Clears old HTML text box
     }
 
 // --- AUDIO ENGINE ---
