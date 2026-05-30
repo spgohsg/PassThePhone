@@ -229,9 +229,14 @@
         playRevealSound(); 
         
         // FIX: [].concat(players) makes a fresh copy so the original game list is never ruined
-        var sorted = [].concat(players).sort(function(a, b) { 
+  //      var sorted = [].concat(players).sort(function(a, b) { 
+  //          return a.number - b.number; 
+    //    });
+
+         var sorted = players.sort(function(a, b) { 
             return a.number - b.number; 
         });
+           
         
         // Build the text list
         var listHtml = "";
