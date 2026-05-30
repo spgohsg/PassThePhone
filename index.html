@@ -225,29 +225,26 @@
     }
 
     // NEW SAFE FUNCTION: Sorts and displays data only when clicked
-    function revealFinalDashboard() {
-        // 1. Sort the players array in ascending order by their number
-
-         playRevealSound();
-     //   var sorted = players.sort(function(a, b) { 
-     //       return a.number - b.number; 
-    //    });
-
-          // FIX: [].concat(players) makes a fresh copy so the original game list is never ruined
+       function revealFinalDashboard() {
+        playRevealSound(); 
+        
+        // FIX: [].concat(players) makes a fresh copy so the original game list is never ruined
         var sorted = [].concat(players).sort(function(a, b) { 
             return a.number - b.number; 
+        });
         
-        // 2. Build a simple text list of the players and numbers
+        // Build the text list
         var listHtml = "";
         for (var i = 0; i < sorted.length; i++) {
             listHtml += "<p>• <strong>" + sorted[i].name + "</strong>: " + sorted[i].number + "</p>";
         }
         
-        // 3. Inject the text list and display the container
+        // Inject the text list and display the container
         document.getElementById('dashboardList').innerHTML = listHtml;
         document.getElementById('secretTableContainer').style.display = 'block';
-        document.getElementById('showDashboardBtn').style.display = 'none'; // Hide the reveal button
+        document.getElementById('showDashboardBtn').style.display = 'none'; 
     }
+
 
 
     function resetGame() {
